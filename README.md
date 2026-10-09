@@ -2,7 +2,14 @@
 
 **How well do speech engines understand and speak Pakistani Urdu, as people actually use it?**
 
-Pakistani Urdu on the phone is not textbook Urdu. It mixes in English words ("appointment confirm ہو گئی ہے"), uses Arabic and Persian phrases (جزاک اللہ، خدا حافظ), and is full of phone numbers, prices and times. This benchmark tests speech-to-text (STT) and text-to-speech (TTS) engines on exactly that kind of speech, recorded on ordinary phones on speakerphone.
+Pakistani Urdu on the phone is not textbook Urdu. It mixes in English words, uses Arabic and Persian phrases, and is full of phone numbers, prices and times:
+
+| Feature | Example |
+|---|---|
+| English words | appointment confirm ہو گئی ہے |
+| Arabic and Persian phrases | جزاک اللہ، خدا حافظ |
+
+This benchmark tests speech-to-text (STT) and text-to-speech (TTS) engines on exactly that kind of speech, recorded on ordinary phones on speakerphone.
 
 It started when a Pakistani clinic's Urdu voice agent kept failing: Hindi-sounding pronunciation, mispronounced English and Arabic words, and wrong phone numbers. Instead of guessing which engine was better, this lab measures it.
 
@@ -21,7 +28,7 @@ It started when a Pakistani clinic's Urdu voice agent kept failing: Hindi-soundi
 - **A free, open-source engine (Whisper large-v3) is the most accurate overall,** for 5 of 6 speakers.
 - **Azure is best at casual conversation and English–Urdu mixing.**
 - **No engine reads Pakistani phone numbers reliably:** about 4 in 10 come out wrong (dropped digits, swapped groups, misheard number words).
-- **Azure has no Pakistani Urdu speech-to-text model.** Its Indian Urdu model shows it: ₹ signs and times like "7.5 بجے".
+- **Azure has no Pakistani Urdu speech-to-text model.** Its Indian Urdu model shows it: it adds ₹ signs to prices and writes half past seven as 7.5.
 
 ### Text-to-speech (4 Azure voices, 8 listeners, 192 blind ratings)
 
@@ -34,8 +41,23 @@ It started when a Pakistani clinic's Urdu voice agent kept failing: Hindi-soundi
 
 - **Male voices sound more natural than female voices.**
 - **Listeners cannot tell Azure's Pakistani and Indian Urdu voices apart.** Only 3% of ratings heard an Indian accent, mostly on the *Pakistani* voices.
-- **The problems are specific words,** such as یا, جزاک اللہ, پلاٹ.
-- **Spelling controls pronunciation:** write English loanwords in Urdu script with Pakistani spelling (**اپوائنٹمنٹ**, not اپائنٹمنٹ), and write times as words (**ساڑھے سات بجے**, not "7:30 بجے").
+- **The problems are specific words** (first table below).
+- **Spelling controls pronunciation:** write English loanwords in Urdu script with Pakistani spelling, and write times as words (second table below).
+
+**Words the voices get wrong**
+
+| Word | What the voices say |
+|---|---|
+| یا | "aa" or "naa" |
+| جزاک اللہ | "jazak-ullah" |
+| پلاٹ | "pee-laat" |
+
+**Spelling that works**
+
+| Write | Not |
+|---|---|
+| **اپوائنٹمنٹ** | اپائنٹمنٹ |
+| **ساڑھے سات بجے** | digits, like 7:30 |
 
 Full results, method and limitations:
 - [STT results](docs/stt-results.md)
