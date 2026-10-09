@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="ur">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Urdu Voice Lab · Recorder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600&family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --ink:#1B2433; --muted:#5B6575; --paper:#FBFCFA; --panel:#F0F3EF;
+    --line:#D6DCD5; --go:#0F6E62; --go-dark:#0A5148; --rec:#B83227; --warn:#9A6A00;
+    --urdu:"Noto Nastaliq Urdu","Jameel Noori Nastaleeq","Urdu Typesetting",serif;
+    --ui:"Noto Sans",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.5}
+  button,select,input{font:inherit}
+  button{cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:.55em 1em}
+  button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--go);outline-offset:2px}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  [hidden]{display:none!important}
+
+  /* setup */
+  #setup{max-width:560px;margin:6vh auto;padding:0 20px}
+  #setup h1{font-size:1.6rem;margin:0 0 .3em}
+  #setup p.lead{color:var(--muted);margin:0 0 2em}
+  .field{margin:0 0 1.4em}
+  .field label.t{display:block;font-weight:600;margin-bottom:.4em}
+  .field small{display:block;color:var(--muted);margin-top:.3em}
+  .radios{display:flex;gap:1.2em;flex-wrap:wrap}
+  select{padding:.45em .6em;border-radius:8px;border:1px solid var(--line);background:#fff}
+  .primary{background:var(--go);border-color:var(--go);color:#fff;font-weight:600;padding:.7em 1.4em}
+  .primary:hover{background:var(--go-dark)}
+  #setupMsg{margin-top:1em;color:var(--rec)}
+
+  /* recording */
+  #rec{min-height:100vh;display:flex;flex-direction:column}
+  .top{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line)}
+  .top .who{font-weight:600}
+  .top .count{color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+  .bar{height:4px;background:var(--panel)}
+  .bar i{display:block;height:100%;width:0;background:var(--go);transition:width .2s}
+
+  .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;gap:22px;text-align:center}
+  .prompt{font-family:var(--urdu);font-size:1.25rem;color:var(--muted);line-height:2.2;direction:rtl;max-width:36em}
+  .sentence{font-family:var(--urdu);direction:rtl;font-size:calc(clamp(34px,6vw,56px) * var(--scale,1));line-height:2.15;max-width:20em;margin:0}
+  .card{font-family:var(--ui);font-size:clamp(30px,5vw,56px);font-weight:600;letter-spacing:.03em;border:2px dashed var(--line);border-radius:14px;padding:.25em .8em;direction:ltr}
+  .card.urdu{font-family:var(--urdu);font-weight:400;letter-spacing:0;direction:rtl;line-height:2}
+  .redo{color:var(--warn);font-size:.95rem}
+
+  .meter{width:min(420px,80vw);height:10px;border-radius:5px;background:var(--panel);overflow:hidden}
+  .meter i{display:block;height:100%;width:0;background:var(--go)}
+  .meter.hot i{background:var(--rec)}
+
+  #recBtn{font-family:var(--urdu);font-size:1.5rem;line-height:2;min-width:220px;padding:.3em 1.4em;border-radius:999px;background:var(--go);border-color:var(--go);color:#fff}
+  #recBtn.on{background:var(--rec);border-color:var(--rec)}
+  @media (prefers-reduced-motion:no-preference){ #recBtn.on{animation:pulse 1.4s ease-in-out infinite} }
+  @keyframes pulse{50%{box-shadow:0 0 0 12px rgba(184,50,39,.15)}}
+  .review{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .review .primary{font-size:1.05rem}
+  .review button{font-family:var(--urdu);font-size:1.15rem;line-height:2;padding:.2em 1.1em}
+  .hint{font-family:var(--urdu);direction:rtl;font-size:1.2rem;line-height:2.2;color:var(--ink);min-height:2.2em}
+  #status{min-height:1.5em;color:var(--muted)}
+  #status.err{color:var(--rec)}
+
+  .ops{border-top:1px solid var(--line);background:var(--panel);padding:10px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:.9rem}
+  .ops .meta{color:var(--muted);margin-right:auto}
+  .ops .meta b{color:var(--ink)}
+  .ops button{padding:.35em .8em;font-size:.9rem}
+  @media (hover:none){ kbd{display:none} }
+  kbd{font-family:var(--ui);font-size:.8em;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .35em;background:#fff}
+</style>
+</head>
+<body>
+
+<section id="setup">
+  <h1>Recorder</h1>
+  <p class="lead">Urdu Voice Lab. Check your details below, then start.</p>
+
+  <div class="field">
+    <label class="t" for="csv">Corpus file</label>
+    <input type="file" id="csv" accept=".csv">
+    <small id="csvInfo">Loading corpus from the site…</small>
+  </div>
+
+  <div class="field">
+    <span class="t" style="display:block;font-weight:600;margin-bottom:.4em">Your session</span>
+    <small id="sessInfo" style="margin:0">Checking your link…</small>
+  </div>
+
+  <div class="field">
+    <span class="t" style="display:block;font-weight:600;margin-bottom:.4em">Save location</span>
+    <small style="margin:0">Each recording uploads automatically. A backup copy also stays on this phone (Download ZIP).</small>
+  </div>
+
+  <button id="start" class="primary" type="button" disabled>Start recording</button>
+  <div id="setupMsg" role="alert"></div>
+</section>
+
+<section id="rec" hidden>
+  <div class="top">
+    <span class="who" id="who"></span>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="bar"><i id="barFill"></i></div>
+
+  <div class="stage">
+    <div class="prompt" id="prompt"></div>
+    <p class="sentence" id="sentence"></p>
+    <div class="card" id="card" hidden></div>
+    <div class="redo" id="redo" hidden>Already recorded. Recording again replaces the saved file.</div>
+
+    <div class="meter" id="meter"><i></i></div>
+
+    <div class="hint" id="hint"></div>
+    <button id="recBtn" type="button">ریکارڈ کریں</button>
+    <div class="review" id="review" hidden>
+      <button id="playBtn" type="button">سنیں <kbd>P</kbd></button>
+      <button id="againBtn" type="button">دوبارہ ریکارڈ کریں <kbd>R</kbd></button>
+      <button id="saveBtn" class="primary" type="button">محفوظ کریں، اگلا جملہ <kbd>Enter</kbd></button>
+    </div>
+    <div id="status" role="status"></div>
+  </div>
+
+  <div class="ops">
+    <span class="meta" id="meta"></span>
+    <button id="backBtn" type="button">Back</button>
+    <button id="skipBtn" type="button">Skip</button>
+    <button id="smallBtn" type="button" aria-label="Smaller text">A−</button>
+    <button id="bigBtn" type="button" aria-label="Larger text">A+</button>
+    <button id="zipBtn" type="button">Download ZIP</button>
+    <button id="exitBtn" type="button">Finish</button>
+  </div>
+</section>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+
+/* ---------- constants ---------- */
+const CONSENT_TEXT = "یہ recordings صرف اس بات کو test کرنے کے لیے ہیں کہ مختلف voice systems اردو کو کتنا اچھی طرح سمجھتے ہیں۔ آپ کا نام کسی recording کے ساتھ نہیں لکھا جائے گا۔ آپ کی recordings (آواز) کسی بھی social media جیسے WhatsApp، YouTube، Instagram، Facebook وغیرہ پر، یا کسی بھی public website پر شیئر یا پوسٹ نہیں کی جائیں گی۔ یہ ایک محفوظ اور private storage میں رکھی جائیں گی، اور صرف testing کے لیے speech technology systems سے چیک کی جائیں گی۔ آپ جب چاہیں منع کر سکتے ہیں، اور آپ کی recordings delete کر دی جائیں گی۔ کیا آپ اس کی اجازت دیتے ہیں؟";
+const PREFIXES = ["0300","0301","0303","0306","0311","0312","0315","0321","0322","0333","0345","0346"];
+const MONTHS = [["اکتوبر",10],["نومبر",11],["دسمبر",12]];
+const TIMES = [["صبح دس بجے","10:00"],["صبح ساڑھے گیارہ بجے","11:30"],["دوپہر دو بجے","14:00"],["شام پانچ بجے","17:00"],["شام ساڑھے چھ بجے","18:30"],["رات آٹھ بجے","20:00"]];
+
+/* ---------- state ---------- */
+let rows = [], items = [], idx = 0;
+let speaker = "", cond = "spk", db = null, wake = null;
+let stream = null, recorder = null, chunks = [], take = null, mime = "", ext = "webm";
+let audioCtx = null, analyser = null, peakHot = false, peakMax = 0, recStart = 0, phase = "idle";
+let store = { manifest: {}, retakes: {}, pending: [], uploaded: {} };
+let player = null;
+
+/* ---------- setup ---------- */
+const FN_URL = "https://YOUR_PROJECT_REF.supabase.co/functions/v1/recorder";
+const TOKEN = new URLSearchParams(location.search).get("t") || "";
+let serverDone = new Set(), closed = false, uploading = false;
+const setOfSpeaker = id => "ABC"[(parseInt(id.slice(1)) - 1) % 3];
+const isDone = id => !!store.manifest[id] || serverDone.has(id);
+
+async function checkSession() {
+  const info = $("#sessInfo");
+  if (!TOKEN) { info.textContent = "This link is incomplete. Please open the personal recording link you were sent."; return; }
+  try {
+    const r = await fetch(FN_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "session", token: TOKEN }) });
+    if (r.status === 403) { info.textContent = "This link is not valid. Please open the full link you were sent."; return; }
+    if (r.status === 410) { info.textContent = "This recording session is closed. Thank you!"; return; }
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const sess = await r.json();
+    speaker = sess.speaker_id; cond = sess.condition; serverDone = new Set(sess.done);
+    info.textContent = `Speaker ${speaker}, ${cond === "spk" ? "speakerphone (phone on a table, about 50 cm away)" : "close mic (10–15 cm, quiet room)"}. Reading set ${setOfSpeaker(speaker)}. ${serverDone.size} recordings already saved.`;
+    $("#start").disabled = false;
+  } catch (e) { info.textContent = "Couldn't reach the server. Check the internet connection and reload the page."; }
+}
+checkSession();
+
+/* corpus: load from the site; file picker is the fallback */
+fetch("../data/corpus.csv", { cache: "no-store" })
+  .then(r => r.ok ? r.text() : Promise.reject())
+  .then(t => { rows = parseCSV(t); $("#csvInfo").textContent = `Loaded from site: ${rows.length} rows. No file needed.`; })
+  .catch(() => { $("#csvInfo").textContent = "Couldn't load from the site. Choose data\\corpus.csv instead."; });
+
+/* phone storage (IndexedDB): takes survive refreshes */
+function openDB() { return new Promise((res, rej) => { const r = indexedDB.open("uvl", 1); r.onupgradeneeded = () => r.result.createObjectStore("takes"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+function idbPut(k, v) { return new Promise((res, rej) => { const t = db.transaction("takes", "readwrite"); t.objectStore("takes").put(v, k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); }
+function idbGet(k) { return new Promise((res, rej) => { const r = db.transaction("takes").objectStore("takes").get(k); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+
+async function keepAwake() { try { wake = await navigator.wakeLock.request("screen"); } catch (e) {} }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !$("#rec").hidden) keepAwake(); });
+
+let scale = 1; try { scale = parseFloat(localStorage.getItem("uvl:scale")) || 1; } catch (e) {}
+const applyScale = () => { document.documentElement.style.setProperty("--scale", scale); try { localStorage.setItem("uvl:scale", scale); } catch (e) {} };
+applyScale();
+
+function parseCSV(t) {
+  t = t.replace(/^\uFEFF/, "");
+  const out = []; let row = [], f = "", q = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (q) { if (c === '"') { if (t[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n") { row.push(f); out.push(row); row = []; f = ""; }
+    else if (c !== "\r") f += c;
+  }
+  if (f || row.length) { row.push(f); out.push(row); }
+  const head = out.shift();
+  return out.filter(r => r.length === head.length).map(r => Object.fromEntries(head.map((k, i) => [k, r[i]])));
+}
+
+function rng(seed) {
+  return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+
+function buildItems() {
+  const n = parseInt(speaker.slice(1)), set = setOfSpeaker(speaker), r = rng(n * 1009);
+  const list = [{ id: "CONSENT", category: "CONSENT", kind: "consent", text: CONSENT_TEXT, entity: "",
+    prompt: "یہ پڑھ کر سنائیں۔ اجازت ہو تو بولیں: جی، میں اجازت دیتا ہوں / دیتی ہوں", check: "verbal consent" }];
+  for (const row of rows) {
+    if (row.use === "tts") continue;
+    const num = parseInt(row.id.slice(3));
+    if (row.category === "NUM" || "ABC"[(num - 1) % 3] === set)
+      list.push({ id: row.id, category: row.category, kind: "row", text: row.text_mixed, entity: row.entity, check: row.check_words, prompt: "" });
+  }
+  let phone = PREFIXES[Math.floor(r() * PREFIXES.length)];
+  for (let i = 0; i < 7; i++) phone += Math.floor(r() * 10);
+  const day = 1 + Math.floor(r() * 28), [mName, mNum] = MONTHS[Math.floor(r() * 3)], [tName, tVal] = TIMES[Math.floor(r() * TIMES.length)];
+  list.push(
+    { id: "FREE01", category: "FREE", kind: "free", text: "", card: phone.slice(0, 4) + "-" + phone.slice(4), cardUrdu: false,
+      entity: phone, prompt: "یہ موبائل نمبر اپنے عام انداز میں بولیں", check: "free phone" },
+    { id: "FREE02", category: "FREE", kind: "free", text: "", card: day + " " + mName + "، " + tName, cardUrdu: true,
+      entity: `2026-${String(mNum).padStart(2, "0")}-${String(day).padStart(2, "0")} ${tVal}`,
+      prompt: "یہ تاریخ اور وقت ایسے بولیں جیسے آپ appointment لے رہے ہوں", check: "free date/time" },
+    { id: "FREE03", category: "FREE", kind: "free", text: "", card: "", entity: "(transcribe by hand)",
+      prompt: "کسی بھی company کی helpline پر call کر کے اپنا کوئی مسئلہ بتائیں، پندرہ سے تیس سیکنڈ", check: "free speech" }
+  );
+  return list;
+}
+
+const key = () => `uvl:${TOKEN}`;
+function loadStore() { try { const s = JSON.parse(localStorage.getItem(key())); if (s && s.manifest) store = { manifest: {}, retakes: {}, pending: [], uploaded: {}, ...s }; } catch (e) {} }
+function saveStore() { try { localStorage.setItem(key(), JSON.stringify(store)); } catch (e) {} }
+
+$("#start").addEventListener("click", async () => {
+  const msg = $("#setupMsg"); msg.textContent = "";
+  const file = $("#csv").files[0];
+  if (file) rows = parseCSV(await file.text());
+  if (!rows.length) { msg.textContent = "Corpus not loaded. Choose data\\corpus.csv."; return; }
+  if (!rows.length || !("text_mixed" in rows[0])) { msg.textContent = "This file doesn't look like corpus.csv (no text_mixed column)."; return; }
+  if (!speaker) { msg.textContent = "Your link hasn't been checked yet. Reload the page."; return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
+  } catch (e) { msg.textContent = "Microphone blocked. Allow microphone access for this page and try again."; return; }
+  try { db = await openDB(); } catch (e) { msg.textContent = "This browser can't store recordings (private mode?). Use a normal Chrome or Safari tab."; return; }
+  try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) {}
+  keepAwake();
+  for (const m of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"]) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) { mime = m; break; }
+  }
+  ext = mime.includes("mp4") ? "m4a" : mime.includes("ogg") ? "ogg" : "webm";
+  setupMeter();
+  items = buildItems();
+  store = { manifest: {}, retakes: {}, pending: [], uploaded: {} }; loadStore();
+  for (const id of Object.keys(store.manifest))            // uploaded before but no longer on the server: not done
+    if (store.uploaded[id] && !serverDone.has(id) && !store.pending.includes(id)) { delete store.manifest[id]; delete store.uploaded[id]; }
+  saveStore();
+  idx = items.findIndex(it => !isDone(it.id)); if (idx < 0) idx = items.length - 1;
+  $("#setup").hidden = true; $("#rec").hidden = false;
+  $("#who").textContent = speaker + ", " + (cond === "spk" ? "speakerphone" : "close mic");
+  show();
+  uploadPending();
+});
+
+/* ---------- meter ---------- */
+function setupMeter() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const src = audioCtx.createMediaStreamSource(stream);
+  analyser = audioCtx.createAnalyser(); analyser.fftSize = 1024; src.connect(analyser);
+  const buf = new Float32Array(analyser.fftSize), bar = $("#meter i"), box = $("#meter");
+  (function loop() {
+    analyser.getFloatTimeDomainData(buf);
+    let sum = 0, peak = 0;
+    for (const v of buf) { sum += v * v; const a = Math.abs(v); if (a > peak) peak = a; }
+    const rms = Math.sqrt(sum / buf.length);
+    bar.style.width = Math.min(100, rms * 400) + "%";
+    const hot = peak > 0.98; box.classList.toggle("hot", hot);
+    if (hot && phase === "recording") peakHot = true;
+    if (phase === "recording" && peak > peakMax) peakMax = peak;   // loudest moment of this take
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ---------- display ---------- */
+const HINTS = {
+  idle: "سبز بٹن دبائیں، آدھا سیکنڈ رکیں، پھر جملہ بولیں",
+  recording: "جملہ مکمل ہو جائے تو سرخ بٹن دبائیں",
+  review: "سن کر چیک کریں۔ ٹھیک ہو تو «محفوظ کریں» دبائیں",
+  bad: "یہ ریکارڈنگ محفوظ نہیں ہو سکتی۔ «دوبارہ ریکارڈ کریں» دبائیں",
+};
+const hint = k => { $("#hint").textContent = HINTS[k]; };
+
+function show() {
+  hint("idle");
+  const it = items[idx];
+  if (player) { player.pause(); player = null; }
+  take = null; phase = "idle"; setStatus("");
+  $("#prompt").textContent = it.prompt;
+  $("#sentence").textContent = it.text;
+  $("#sentence").hidden = !it.text;
+  const card = $("#card");
+  card.hidden = !it.card; card.textContent = it.card || ""; card.classList.toggle("urdu", !!it.cardUrdu);
+  $("#redo").hidden = !isDone(it.id);
+  $("#recBtn").hidden = false; $("#recBtn").classList.remove("on"); $("#recBtn").textContent = "ریکارڈ کریں";
+  $("#review").hidden = true;
+  refreshCounts();
+  $("#backBtn").disabled = idx === 0;
+}
+function escapeHtml(s) { return s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function setStatus(t, err) { const s = $("#status"); s.textContent = t; s.classList.toggle("err", !!err); }
+
+/* ---------- recording ---------- */
+function startRec() {
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  chunks = []; peakHot = false; peakMax = 0;
+  recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+  recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  recorder.onstop = () => {
+    const dur = (performance.now() - recStart) / 1000;
+    const bad = dur < 1.0 || peakMax < 0.02;                     // too short or silent: can't be saved
+    take = { blob: new Blob(chunks, { type: recorder.mimeType || mime }), dur, clipped: peakHot, bad };
+    phase = "review";
+    $("#recBtn").hidden = true; $("#review").hidden = false;
+    const notes = [];
+    if (dur < 1.0) notes.push("Too short to be the full sentence. Please record again.");
+    if (peakHot) notes.push("Too loud, the audio distorted. Move the phone back and record again.");
+    if (peakMax < 0.02) notes.push("No voice detected: the microphone picked up silence. Press Play to check, then record again.");
+    setStatus(notes.join(" ") || `Recorded ${dur.toFixed(1)} s.`, notes.length > 0);
+    $("#saveBtn").disabled = bad;
+    hint(bad ? "bad" : "review");
+  };
+  recorder.start();
+  recStart = performance.now(); phase = "recording";
+  $("#recBtn").classList.add("on"); $("#recBtn").textContent = "روکیں";
+  setStatus("Recording…");
+  hint("recording");
+}
+function stopRec() {
+  if (!recorder || recorder.state !== "recording") return;
+  if (performance.now() - recStart < 800) { setStatus("Recording… speak the sentence, then tap Stop."); return; }   // ignore accidental double-tap
+  recorder.stop();
+}
+
+$("#recBtn").addEventListener("click", () => phase === "recording" ? stopRec() : startRec());
+$("#playBtn").addEventListener("click", play);
+$("#againBtn").addEventListener("click", again);
+$("#saveBtn").addEventListener("click", saveNext);
+
+function play() {
+  if (!take) return;
+  if (player) player.pause();
+  player = new Audio(URL.createObjectURL(take.blob)); player.play();
+}
+function again() {
+  if (phase !== "review") return;
+  const id = items[idx].id; store.retakes[id] = (store.retakes[id] || 0) + 1;
+  take = null; phase = "idle";
+  $("#review").hidden = true; $("#recBtn").hidden = false; $("#recBtn").classList.remove("on"); $("#recBtn").textContent = "ریکارڈ کریں";
+  setStatus("");
+  startRec();
+}
+
+async function writeFile(name, blob) { await idbPut(name, blob); }
+function download(blob, name) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+
+async function saveNext() {
+  if (phase !== "review" || !take || take.bad) return;
+  const it = items[idx], name = `${speaker}_${it.id}_${cond}.${ext}`;
+  $("#saveBtn").disabled = true;
+  try {
+    await writeFile(name, take.blob);
+    store.manifest[it.id] = {
+      file: name, speaker, row_id: it.id, condition: cond, category: it.category,
+      text_read: it.text || it.card || "", entity: it.entity || "",
+      duration_s: take.dur.toFixed(2), retakes: store.retakes[it.id] || 0,
+      clipped: take.clipped ? "yes" : "no", recorded_at: new Date().toISOString()
+    };
+    if (!store.pending.includes(it.id)) store.pending.push(it.id);
+    store.uploaded[it.id] = false;
+    saveStore();
+    uploadPending();
+    let next = items.findIndex((x, i) => i > idx && !isDone(x.id));        // next sentence not yet recorded
+    if (next < 0) next = items.findIndex(x => !isDone(x.id));              // or any earlier one still missing
+    if (next >= 0) { idx = next; show(); }
+    else { show(); setStatus("All items recorded for " + speaker + ". Keep this page open until every recording shows as uploaded."); }
+  } catch (e) { setStatus("Saving failed: " + e.message + ". Nothing was lost; press Save again.", true); }
+  $("#saveBtn").disabled = false;
+}
+
+/* ---------- upload queue: retries until every take reaches Supabase ---------- */
+async function uploadPending() {
+  if (uploading || closed || !store.pending.length) return;
+  uploading = true;
+  try {
+    while (store.pending.length) {
+      const id = store.pending[0], m = store.manifest[id];
+      const blob = m && await idbGet(m.file);
+      if (!blob) { store.pending.shift(); saveStore(); continue; }
+      const fd = new FormData();
+      fd.append("token", TOKEN); fd.append("row_id", id);
+      for (const k of ["category", "text_read", "entity", "duration_s", "retakes", "clipped"]) fd.append(k, String(m[k] ?? ""));
+      fd.append("file", blob, m.file);
+      let r;
+      try { r = await fetch(FN_URL, { method: "POST", body: fd }); }
+      catch (e) { break; }                                   // offline: try again later
+      if (r.status === 410) { closed = true; setStatus("This session has been closed. Recordings so far are saved.", true); break; }
+      if (r.status >= 500) break;                            // server busy: try again later
+      store.pending.shift();
+      if (r.ok) { store.uploaded[id] = true; serverDone.add(id); }
+      else m.upload_error = "HTTP " + r.status;              // rejected file: kept on phone only
+      saveStore();
+      refreshCounts();
+    }
+  } finally { uploading = false; refreshCounts(); }
+}
+setInterval(uploadPending, 15000);
+window.addEventListener("online", uploadPending);
+
+function refreshCounts() {
+  if (!items.length) return;
+  const it = items[idx], waiting = store.pending.length;
+  const done = items.filter(x => isDone(x.id)).length;
+  $("#count").textContent = `${idx + 1} of ${items.length}  (${done} saved, ${waiting ? waiting + " waiting to upload" : "all uploaded"})`;
+  $("#barFill").style.width = (done / items.length * 100) + "%";
+  const up = store.pending.includes(it.id) ? " | waiting to upload"
+    : (store.manifest[it.id] && store.manifest[it.id].upload_error) ? " | upload rejected, kept on phone"
+    : (store.uploaded[it.id] || serverDone.has(it.id)) ? " | uploaded ✓" : "";
+  $("#meta").innerHTML = `<b>${it.id}</b> ${it.category}${it.check ? " | " + escapeHtml(it.check) : ""}${up}`;
+}
+
+function manifestBlob() {
+  const cols = ["file","speaker","row_id","condition","category","text_read","entity","duration_s","retakes","clipped","recorded_at"];
+  const q = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+  const lines = [cols.join(",")];
+  for (const it of items) { const m = store.manifest[it.id]; if (m) lines.push(cols.map(c => q(m[c])).join(",")); }
+  return new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+}
+
+/* ---------- navigation ---------- */
+$("#backBtn").addEventListener("click", () => { if (phase === "recording") return; if (idx > 0) { idx--; show(); } });
+$("#skipBtn").addEventListener("click", () => { if (phase === "recording") return; if (idx < items.length - 1) { idx++; show(); } });
+$("#zipBtn").addEventListener("click", async () => {
+  if (phase === "recording") return;
+  if (!window.JSZip) { setStatus("ZIP tool didn't load. Check the internet connection and reload the page.", true); return; }
+  setStatus("Preparing ZIP…");
+  try {
+    const zip = new JSZip(), folder = zip.folder(speaker);
+    let n = 0;
+    for (const it of items) {
+      const m = store.manifest[it.id]; if (!m) continue;
+      const b = await idbGet(m.file); if (b) { folder.file(m.file, b); n++; }
+    }
+    folder.file(`manifest_${speaker}_${cond}.csv`, manifestBlob());
+    download(await zip.generateAsync({ type: "blob" }), `${speaker}_${cond}.zip`);
+    setStatus(`ZIP downloaded: ${n} recordings plus manifest.`);
+  } catch (e) { setStatus("ZIP failed: " + e.message, true); }
+});
+$("#smallBtn").addEventListener("click", () => { scale = Math.max(0.7, +(scale - 0.1).toFixed(1)); applyScale(); });
+$("#bigBtn").addEventListener("click", () => { scale = Math.min(1.6, +(scale + 0.1).toFixed(1)); applyScale(); });
+$("#exitBtn").addEventListener("click", () => {
+  if (phase === "recording") return;
+  const left = items.filter(x => !isDone(x.id)).length, waiting = store.pending.length;
+  if (waiting && !confirm(`${waiting} recordings are still waiting to upload. They stay on this phone and upload next time this link is opened with internet. Finish anyway?`)) return;
+  if (left && !confirm(`${left} items are not recorded yet. Progress is kept; open the same link later to continue. Finish now?`)) return;
+  location.reload();
+});
+
+document.addEventListener("keydown", e => {
+  if ($("#rec").hidden || e.target.matches("input,select,textarea")) return;
+  if (e.code === "Space") { e.preventDefault(); if (phase === "recording") stopRec(); else if (phase === "idle") startRec(); }
+  else if (e.key === "Enter") { e.preventDefault(); saveNext(); }
+  else if (e.key.toLowerCase() === "p") play();
+  else if (e.key.toLowerCase() === "r") again();
+});
+})();
+</script>
+</body>
+</html>

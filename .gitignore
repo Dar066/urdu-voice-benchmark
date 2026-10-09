@@ -1,0 +1,37 @@
+# --- Secrets: never commit API keys ---
+.env
+*.env
+.env.*
+!.env.example
+
+# --- Audio: speaker recordings are personal data; TTS output is regenerable ---
+data/audio/
+outputs/audio/
+*.wav
+*.mp3
+*.ogg
+*.m4a
+*.flac
+*.webm
+!tools/listen/clips/*.mp3
+
+# --- Local AI models (large downloads) ---
+models/
+*.bin
+
+# --- Raw results (large, regenerable) ---
+results/raw/
+*.sqlite
+*.db
+
+# --- Python ---
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
