@@ -2,6 +2,8 @@
 
 **How well do speech engines understand and speak Pakistani Urdu, as people actually use it?**
 
+**Plain-language results for business owners:** https://urdu-voice-benchmark-site.vercel.app
+
 Pakistani Urdu on the phone is not textbook Urdu. It mixes in English words, uses Arabic and Persian phrases, and is full of phone numbers, prices and times:
 
 | Feature | Example |
