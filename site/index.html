@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Urdu Voice Benchmark</title>
+<meta name="description" content="How well do AI voice agents understand and speak Pakistani Urdu? Plain-language results for business owners: speech recognition, voices, and a checklist before you launch.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F4; --surface:#FFFFFF; --ink:#13232A; --muted:#55666C; --line:#D5DEDC;
+  --teal:#0E5E5A; --teal-soft:#D6E9E6; --wrong:#B4235A; --wrong-soft:#F6DCE6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E181C; --surface:#152227; --ink:#E4EDEB; --muted:#9AAFB0; --line:#27393F;
+    --teal:#5FC0B4; --teal-soft:#1D3A3A; --wrong:#F0739F; --wrong-soft:#3A1F2B;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E181C; --surface:#152227; --ink:#E4EDEB; --muted:#9AAFB0; --line:#27393F;
+  --teal:#5FC0B4; --teal-soft:#1D3A3A; --wrong:#F0739F; --wrong-soft:#3A1F2B;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 "Instrument Sans",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+a{color:var(--teal);text-underline-offset:3px}
+a:focus-visible{outline:3px solid var(--teal);outline-offset:3px;border-radius:2px}
+[lang="ur"]{font-family:"Noto Nastaliq Urdu",serif;line-height:2.3;font-size:1.05em}
+.num{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+
+/* hero */
+header{padding:56px 0 24px}
+.site{font-weight:600;font-size:15px;color:var(--muted);margin:0 0 40px}
+h1{font-size:clamp(32px,6vw,50px);line-height:1.08;letter-spacing:-.02em;font-weight:700;margin:0 0 18px;max-width:16ch}
+.lede{font-size:19px;color:var(--muted);margin:0;max-width:60ch}
+
+.call{margin:40px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.call .row{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:center;padding:18px 22px}
+.call .row + .row{border-top:1px dashed var(--line)}
+.call .who{font-size:14px;color:var(--muted);font-weight:500}
+.call .said{text-align:right;font-size:22px}
+.call .heard{font-size:30px;font-weight:600;letter-spacing:.04em;color:var(--wrong);text-align:right}
+.call .ok{font-size:30px;font-weight:600;letter-spacing:.04em;color:var(--teal);text-align:right}
+.call-note{font-size:15px;color:var(--muted);margin:12px 2px 0}
+@media (prefers-reduced-motion: no-preference){
+  .heard .g1{display:inline-block;animation:swap 1.4s ease-in-out .9s both}
+  .heard .g2{display:inline-block;animation:swap2 1.4s ease-in-out .9s both}
+  @keyframes swap{from{transform:translateX(var(--d1,0));opacity:.35}to{transform:none;opacity:1}}
+  @keyframes swap2{from{transform:translateX(var(--d2,0));opacity:.35}to{transform:none;opacity:1}}
+}
+
+/* sections */
+section{padding:44px 0;border-top:1px solid var(--line)}
+h2{font-size:28px;line-height:1.2;letter-spacing:-.01em;margin:0 0 12px}
+h3{font-size:19px;margin:30px 0 8px}
+p{margin:0 0 14px;max-width:66ch}
+.small{font-size:15px;color:var(--muted)}
+
+.answers{display:grid;gap:14px;margin-top:18px}
+.answer{border-left:4px solid var(--teal);padding:4px 0 4px 18px}
+.answer.bad{border-left-color:var(--wrong)}
+.answer strong{display:block;font-size:19px;line-height:1.35;margin-bottom:4px}
+.answer span{color:var(--muted)}
+
+/* bar charts */
+.chart{margin:16px 0 6px}
+.bar{display:grid;grid-template-columns:150px 1fr 64px;gap:12px;align-items:center;padding:7px 0}
+.bar .label{font-weight:500;font-size:15px;line-height:1.3}
+.bar .label small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+.bar .track{display:block;height:22px;background:var(--teal-soft);border-radius:4px;overflow:hidden}
+.bar .fill{display:block;height:100%;background:var(--teal);border-radius:4px 0 0 4px}
+.bar.weak .fill{background:var(--muted)}
+.bar .val{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.chart-cap{font-size:14px;color:var(--muted);margin:6px 0 18px}
+
+table{border-collapse:collapse;width:100%;margin:12px 0 4px;font-size:15px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:600;color:var(--muted);font-size:14px}
+td.ur{text-align:right}
+td .best{font-weight:700;color:var(--teal)}
+
+/* checklist */
+.check{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:12px}
+.check li{display:grid;grid-template-columns:26px 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.check li::before{content:"";width:20px;height:20px;margin-top:3px;border:2px solid var(--teal);border-radius:5px}
+.check strong{display:block;margin-bottom:2px}
+.check p{margin:0;color:var(--muted);font-size:15.5px}
+.pair{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:6px;align-items:center}
+.pair .yes{color:var(--teal);font-weight:600}
+.pair .no{color:var(--wrong);text-decoration:line-through;text-decoration-thickness:1px}
+.pair em{font-style:normal;font-size:13px;color:var(--muted)}
+
+dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:8px 20px;margin:16px 0 0;font-size:15.5px}
+dl.facts dt{font-weight:600}
+dl.facts dd{margin:0;color:var(--muted)}
+
+.contact{background:var(--teal);color:#fff;border-radius:16px;padding:30px 26px;margin-top:8px}
+:root[data-theme="dark"] .contact{color:#0E181C}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .contact{color:#0E181C}}
+.contact h2{color:inherit}
+.contact p{color:inherit;opacity:.92}
+.contact a.btn{display:inline-block;margin-top:6px;background:var(--surface);color:var(--ink);text-decoration:none;font-weight:600;padding:12px 18px;border-radius:9px}
+.contact a.btn:focus-visible{outline-color:var(--surface)}
+
+footer{padding:36px 0 56px;font-size:14px;color:var(--muted)}
+footer p{max-width:none}
+
+@media (max-width:560px){
+  body{font-size:16px}
+  header{padding-top:36px}
+  .call .row{grid-template-columns:1fr;gap:4px;padding:14px 16px}
+  .call .said{font-size:19px}
+  .call .heard,.call .ok{font-size:24px}
+  .bar{grid-template-columns:96px 1fr 52px;gap:8px}
+  dl.facts{grid-template-columns:1fr;gap:2px}
+  dl.facts dd{margin-bottom:10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="site">Urdu Voice Benchmark</p>
+  <h1>Will an AI voice agent understand your Pakistani callers?</h1>
+  <p class="lede">Three speech recognition engines and four Azure Urdu voices, tested on everyday Pakistani Urdu recorded on ordinary phones. Here is what a business owner should know before putting one on the phone line.</p>
+
+  <div class="call" role="group" aria-label="Example: a phone number the caller said, and what the engine wrote">
+    <div class="row">
+      <span class="who">Caller says</span>
+      <span class="said" lang="ur" dir="rtl">صفر تین چار پانچ، چھ سات آٹھ نو صفر ایک دو</span>
+    </div>
+    <div class="row">
+      <span class="who">Should be</span>
+      <span class="ok num">0345 6789012</span>
+    </div>
+    <div class="row">
+      <span class="who">Engine writes</span>
+      <span class="heard num"><span class="g1">6789012</span> <span class="g2">0345</span></span>
+    </div>
+  </div>
+  <p class="call-note">Every digit is right, and the number is still wrong. Nothing in the text looks suspicious, so the agent books the appointment under a number that doesn't exist.</p>
+</header>
+
+<section aria-labelledby="short">
+  <h2 id="short">The short answer</h2>
+  <div class="answers">
+    <div class="answer">
+      <strong>Ordinary sentences are understood well.</strong>
+      <span>On greetings, business talk and English–Urdu mixing, the best engine gets about 93 to 97 of every 100 letters right.</span>
+    </div>
+    <div class="answer bad">
+      <strong>Phone numbers are not.</strong>
+      <span>Even the best engine got only 33 of 53 phone numbers fully right. Never let an agent take a number by voice alone.</span>
+    </div>
+    <div class="answer">
+      <strong>A free engine is the most accurate.</strong>
+      <span>Whisper large-v3 (open source) made fewer mistakes than Azure. Azure is still better at casual speech and is faster today.</span>
+    </div>
+    <div class="answer bad">
+      <strong>Most voice problems come from how the text is written.</strong>
+      <span>Spelling, times and codes decide how the voice sounds. Several fixes cost nothing (see the checklist).</span>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="hear">
+  <h2 id="hear">Understanding callers</h2>
+  <p>Six speakers read 238 daily-use sentences into their phones, held on a table on speakerphone. Each engine wrote down what it heard.</p>
+
+  <h3>Phone numbers written fully correct, out of 53</h3>
+  <div class="chart" role="img" aria-label="Phone numbers fully correct out of 53: Whisper large-v3 33, Whisper turbo 33, Azure 30">
+    <div class="bar"><span class="label">Whisper large-v3<small>free, open source</small></span><span class="track"><span class="fill" style="width:62.3%"></span></span><span class="val">33</span></div>
+    <div class="bar"><span class="label">Whisper turbo<small>free, open source</small></span><span class="track"><span class="fill" style="width:62.3%"></span></span><span class="val">33</span></div>
+    <div class="bar weak"><span class="label">Azure<small>Indian Urdu model</small></span><span class="track"><span class="fill" style="width:56.6%"></span></span><span class="val">30</span></div>
+  </div>
+  <p class="chart-cap">About 4 in 10 numbers came out wrong in every engine: dropped digits, swapped groups, or <span lang="ur">صفر</span> (zero) heard as <span lang="ur">سفر</span> (journey).</p>
+
+  <h3>Mistakes per 100 letters, by kind of speech</h3>
+  <table>
+    <thead><tr><th scope="col">Kind of speech</th><th scope="col">Azure</th><th scope="col">Whisper large-v3</th></tr></thead>
+    <tbody>
+      <tr><td>Casual caller speech</td><td><span class="best">3</span></td><td>4</td></tr>
+      <tr><td>English–Urdu mixing</td><td><span class="best">7</span></td><td>9</td></tr>
+      <tr><td>Greetings and courtesy</td><td><span class="best">7</span></td><td>8</td></tr>
+      <tr><td>Business and customer service</td><td>11</td><td><span class="best">6</span></td></tr>
+      <tr><td>English words in Urdu</td><td>11</td><td>11</td></tr>
+      <tr><td>Numbers, prices, times</td><td>42</td><td><span class="best">33</span></td></tr>
+      <tr><td><strong>All speech</strong></td><td><strong>18</strong></td><td><strong class="best">15</strong></td></tr>
+    </tbody>
+  </table>
+  <p class="chart-cap">Lower is better. Number rows look worse than they are: when a caller says a number in words and the engine writes it in digits, the number can be right while many letters differ.</p>
+
+  <h3>Azure has no Pakistani Urdu model</h3>
+  <p>Its only Urdu speech recognition is Indian Urdu. You can see it in the output: rupee amounts come back with the Indian ₹ sign, and half past seven comes back as 7.5. Clean these up before your agent's AI reads them.</p>
+</section>
+
+<section aria-labelledby="speak">
+  <h2 id="speak">Speaking to callers</h2>
+  <p>Eight Pakistani listeners rated 24 sentences each without knowing which voice they were hearing: 192 ratings in total.</p>
+
+  <h3>How natural each voice sounds, 1 to 5</h3>
+  <div class="chart" role="img" aria-label="Naturalness out of 5: Asad 3.50, Salman 3.33, Uzma 3.17, Gul 3.12">
+    <div class="bar"><span class="label">Asad<small>Pakistani male</small></span><span class="track"><span class="fill" style="width:70%"></span></span><span class="val">3.50</span></div>
+    <div class="bar"><span class="label">Salman<small>Indian male</small></span><span class="track"><span class="fill" style="width:66.6%"></span></span><span class="val">3.33</span></div>
+    <div class="bar weak"><span class="label">Uzma<small>Pakistani female</small></span><span class="track"><span class="fill" style="width:63.4%"></span></span><span class="val">3.17</span></div>
+    <div class="bar weak"><span class="label">Gul<small>Indian female</small></span><span class="track"><span class="fill" style="width:62.4%"></span></span><span class="val">3.12</span></div>
+  </div>
+  <p class="chart-cap">Male voices sounded more natural. Uzma had a wrong-sounding word in 27% of clips, the most of any voice.</p>
+
+  <p>The "Pakistani" and "Indian" labels made no difference to listeners. Only 3% of ratings heard an Indian accent, and most of those were on the Pakistani voices. What listeners did notice were particular words:</p>
+  <table>
+    <thead><tr><th scope="col">Word</th><th scope="col">What the voices say</th></tr></thead>
+    <tbody>
+      <tr><td class="ur" lang="ur" dir="rtl">یا</td><td>"aa" or "naa", so "card or bank transfer" becomes unclear</td></tr>
+      <tr><td class="ur" lang="ur" dir="rtl">جزاک اللہ</td><td>"jazak-ullah"</td></tr>
+      <tr><td class="ur" lang="ur" dir="rtl">پلاٹ</td><td>"pee-laat"</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="launch">
+  <h2 id="launch">Checklist before you launch</h2>
+  <p>Most of these cost nothing: they change only the instructions your agent's AI follows.</p>
+  <ul class="check">
+    <li><div><strong>Take phone numbers on the keypad, or read them back</strong><p>Read the number back in groups and ask the caller to confirm, whichever engine you use.</p></div></li>
+    <li><div><strong>Use a male voice</strong><p>Azure Asad, with Salman as the fallback.</p></div></li>
+    <li><div><strong>Write English words in Urdu script, with Pakistani spelling</strong><p>Every voice was clearer this way. The spelling decides the vowels:</p>
+      <div class="pair"><span class="yes" lang="ur" dir="rtl">اپوائنٹمنٹ</span><em>not</em><span class="no" lang="ur" dir="rtl">اپائنٹمنٹ</span></div></div></li>
+    <li><div><strong>Write times as words</strong><p>Written as digits, every voice read 7:30 as "seven baj kar tees minute baje".</p>
+      <div class="pair"><span class="yes" lang="ur" dir="rtl">ساڑھے سات بجے</span><em>not</em><span class="no num">7:30</span></div></div></li>
+    <li><div><strong>Write booking codes digit by digit</strong><p>Otherwise 4721 is read as "forty-seven twenty-one".</p>
+      <div class="pair"><span class="yes" lang="ur" dir="rtl">چار سات دو ایک</span><em>not</em><span class="no num">4721</span></div></div></li>
+    <li><div><strong>Add pronunciation rules for problem words</strong><p>Fix words like <span lang="ur">یا</span> and <span lang="ur">جزاک اللہ</span>, and listen to them before going live.</p></div></li>
+    <li><div><strong>Listen to a real call to the end</strong><p>One listener heard the last words of sentences fading. Don't put the key detail in the final word.</p></div></li>
+  </ul>
+</section>
+
+<section aria-labelledby="how">
+  <h2 id="how">How it was tested</h2>
+  <dl class="facts">
+    <dt>Sentences</dt><dd>238 in daily-use Pakistani Urdu: clinic, shop, property, office and customer-service talk, with English words, Arabic phrases and numbers</dd>
+    <dt>Speakers</dt><dd>6, on their own phones, speakerphone at arm's length</dd>
+    <dt>Engines</dt><dd>Azure Speech (Indian Urdu), Whisper large-v3, Whisper turbo</dd>
+    <dt>Voices</dt><dd>Azure Asad, Uzma, Salman, Gul; 1,292 clips checked automatically</dd>
+    <dt>Listeners</dt><dd>8 Pakistani listeners, blind test, 192 ratings</dd>
+    <dt>Not measured</dt><dd>Speed on a live call, close-microphone audio, voices from other providers</dd>
+  </dl>
+  <p class="small" style="margin-top:18px">Six speakers and eight listeners are enough to show the main trends, but not small differences. Full method, numbers and limitations are in the <a href="https://github.com/Dar066/urdu-voice-benchmark">public repository</a>.</p>
+</section>
+
+<section aria-labelledby="next" style="border-top:0;padding-top:8px">
+  <div class="contact">
+    <h2 id="next">A speech model trained for Pakistani Urdu</h2>
+    <p>A speech recognition model fine-tuned on Pakistani Urdu is in development and will be measured on this same benchmark. Get in touch for early access, a test on your own callers, or an Urdu voice agent for your business.</p>
+    <a class="btn" href="mailto:dar9435@gmail.com?subject=Urdu%20voice%20agent">Email dar9435@gmail.com</a>
+  </div>
+</section>
+
+</div>
+<footer>
+  <div class="wrap">
+    <p>Urdu Voice Benchmark by Adnan (<a href="https://github.com/Dar066">github.com/Dar066</a>), Lahore, 2026. Results and corpus under CC BY 4.0, code under MIT. No speaker recordings are published.</p>
+  </div>
+</footer>
+<script>
+// slide the swapped groups from their correct positions into the wrong order
+(function(){
+  try{
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var g1=document.querySelector('.heard .g1'), g2=document.querySelector('.heard .g2');
+    if(!g1||!g2) return;
+    var w1=g1.getBoundingClientRect().width, w2=g2.getBoundingClientRect().width, sp=8;
+    g1.style.setProperty('--d1', (w2+sp)+'px');
+    g2.style.setProperty('--d2', -(w1+sp)+'px');
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
